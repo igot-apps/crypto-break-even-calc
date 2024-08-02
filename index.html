@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Average Buy Price & Break-Even Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+    }
+    .input-group {
+      margin-bottom: 10px;
+    }
+    .input-group label {
+      margin-right: 10px;
+    }
+    #addRow {
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Crypto Average Buy Price & Break-Even Calculator</h1>
+
+  <div id="inputs"></div>
+
+  <button id="addRow">Add Another Purchase</button>
+  <button onclick="calculateBreakEven()">Calculate Break-Even</button>
+  <button onclick="resetApp()">Reset</button>
+
+  <h2>Results</h2>
+  <p>Total Money Invested: <span id="totalInvested">0</span> USDT</p>
+  <p>Total Crypto Coins Purchased: <span id="totalCrypto">0</span></p>
+  <p>Average Buy Price: <span id="avgPrice">0</span> USD</p>
+  <p>Break-Even Price: <span id="breakEvenPrice">0</span> USD</p>
+
+  <script>
+    // Function to save data to localStorage
+    function saveData() {
+      const data = [];
+      document.querySelectorAll('.input-group').forEach(group => {
+        const price = group.querySelector('.price').value || '';
+        const amount = group.querySelector('.amount').value || '';
+        const fee = group.querySelector('.fee').value || '';
+        data.push({ price, amount, fee });
+      });
+      localStorage.setItem('cryptoData', JSON.stringify(data));
+    }
+
+    // Function to load data from localStorage
+    function loadData() {
+      const data = JSON.parse(localStorage.getItem('cryptoData')) || [];
+      const inputsDiv = document.getElementById('inputs');
+      inputsDiv.innerHTML = '';
+      data.forEach(item => {
+        addInputGroup(item.price, item.amount, item.fee);
+      });
+    }
+
+    // Function to add a new input group
+    function addInputGroup(price = '', amount = '', fee = '') {
+      const newGroup = document.createElement('div');
+      newGroup.classList.add('input-group');
+      newGroup.innerHTML = `
+        <label>Price ($): <input type="number" step="0.01" class="price" value="${price}"></label>
+        <label>Amount (Crypto): <input type="number" step="0.00000001" class="amount" value="${amount}"></label>
+        <label>Fees ($): <input type="number" step="0.01" class="fee" value="${fee}"></label>
+      `;
+      document.getElementById('inputs').appendChild(newGroup);
+    }
+
+    // Function to calculate break-even price, total investment, and total crypto coins purchased
+    function calculateBreakEven() {
+      let totalCost = 0;
+      let totalAmount = 0;
+      let totalInvested = 0;
+
+      document.querySelectorAll('.input-group').forEach(group => {
+        const price = parseFloat(group.querySelector('.price').value) || 0;
+        const amount = parseFloat(group.querySelector('.amount').value) || 0;
+        const fee = parseFloat(group.querySelector('.fee').value) || 0;
+        
+        const cost = (price * amount) + fee;
+        totalCost += cost;
+        totalAmount += amount;
+        totalInvested += cost;
+      });
+
+      const avgPrice = totalCost / totalAmount;
+      const breakEvenPrice = avgPrice; // Assuming fees are included in totalCost
+
+      document.getElementById('avgPrice').innerText = avgPrice.toFixed(2);
+      document.getElementById('breakEvenPrice').innerText = breakEvenPrice.toFixed(2);
+      document.getElementById('totalInvested').innerText = totalInvested.toFixed(2);
+      document.getElementById('totalCrypto').innerText = totalAmount.toFixed(8); // Display total crypto coins purchased
+      saveData(); // Save data whenever calculation is done
+    }
+
+    // Function to reset the app
+    function resetApp() {
+      localStorage.removeItem('cryptoData');
+      document.getElementById('inputs').innerHTML = '';
+      document.getElementById('avgPrice').innerText = '0';
+      document.getElementById('breakEvenPrice').innerText = '0';
+      document.getElementById('totalInvested').innerText = '0';
+      document.getElementById('totalCrypto').innerText = '0';
+      addInputGroup(); // Add an initial input group
+    }
+
+    // Event listener for adding new rows
+    document.getElementById('addRow').addEventListener('click', () => {
+      addInputGroup();
+      saveData(); // Save data whenever a new row is added
+    });
+
+    // Load data when the page loads
+    window.onload = loadData;
+
+  </script>
+</body>
+</html>
