@@ -123,9 +123,9 @@
     </div>
 
     <script>
-        let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+        let inventory = [];
         let receiptItems = [];
-        let receiptHistory = JSON.parse(localStorage.getItem('receiptHistory')) || [];
+        let receiptHistory = [];
 
         function addProduct() {
             const name = document.getElementById('productName').value;
@@ -134,7 +134,6 @@
 
             if (name && !isNaN(price) && !isNaN(stock)) {
                 inventory.push({ name, price, stock });
-                saveToLocalStorage();
                 renderInventory();
                 clearForm();
             } else {
@@ -170,7 +169,6 @@
                 const quantity = purchaseAmount / item.price;
                 receiptItems.push({ name: item.name, quantity: quantity.toFixed(2), price: purchaseAmount.toFixed(2) });
                 item.stock -= quantity;
-                saveToLocalStorage();
                 renderInventory();
                 renderReceipt();
             } else {
@@ -180,7 +178,6 @@
 
         function removeInventoryItem(index) {
             inventory.splice(index, 1);
-            saveToLocalStorage();
             renderInventory();
         }
 
@@ -212,7 +209,6 @@
             }
 
             receiptItems.splice(index, 1);
-            saveToLocalStorage();
             renderInventory();
             renderReceipt();
         }
@@ -223,7 +219,6 @@
                 const receiptTotal = receiptItems.reduce((sum, item) => sum + parseFloat(item.price), 0);
                 receiptHistory.push({ label, items: [...receiptItems], total: receiptTotal.toFixed(2) });
                 receiptItems = [];
-                saveToLocalStorage();
                 renderReceipt();
                 renderReceiptHistory();
                 alert(`Checkout complete. Receipt labeled: "${label}".`);
@@ -254,21 +249,12 @@
             });
         }
 
-        function saveToLocalStorage() {
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-            localStorage.setItem('receiptHistory', JSON.stringify(receiptHistory));
-        }
-
         function clearForm() {
             document.getElementById('productName').value = '';
             document.getElementById('productPrice').value = '';
             document.getElementById('productStock').value = '';
             document.getElementById('receiptLabel').value = '';
         }
-
-        // Initial render
-        renderInventory();
-        renderReceiptHistory();
     </script>
 </body>
 </html>

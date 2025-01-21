@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frozen Food Retail App - Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+        }
+        .container {
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        table th {
+            background-color: #333;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        .report-section {
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        .report-section h2 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Frozen Food Retail Management - Report</h1>
+    </header>
+    <div class="container">
+        <div class="report-section">
+            <h2>Generate Daily Sales Report</h2>
+            <button onclick="generateReport()">Generate Report</button>
+
+            <div id="reportSummary" style="display: none;">
+                <h3>Total Sales (GHS): <span id="totalSales">0.00</span></h3>
+                <h3>Most Sold Product: <span id="mostSoldProduct">-</span></h3>
+                <h3>Least Sold Product: <span id="leastSoldProduct">-</span></h3>
+
+                <h3>Detailed Report</h3>
+                <table id="detailedReport">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Average Quantity Sold (Kg)</th>
+                            <th>Total Quantity Sold (Kg)</th>
+                            <th>Total Revenue (GHS)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Assume receiptHistory has all completed sales with item sales data.
+        let receiptHistory = JSON.parse(localStorage.getItem('receiptHistory')) || [];
+
+        function generateReport() {
+            const salesData = aggregateSalesData();
+            renderReport(salesData);
+        }
+
+        function aggregateSalesData() {
+            let productSales = {};
+
+            receiptHistory.forEach(receipt => {
+                receipt.items.forEach(item => {
+                    if (!productSales[item.name]) {
+                        productSales[item.name] = { totalQuantity: 0, totalRevenue: 0 };
+                    }
+                    productSales[item.name].totalQuantity += parseFloat(item.quantity);
+                    productSales[item.name].totalRevenue += parseFloat(item.price);
+                });
+            });
+
+            const reportData = Object.keys(productSales).map(productName => {
+                const data = productSales[productName];
+                return {
+                    name: productName,
+                    totalQuantity: data.totalQuantity,
+                    totalRevenue: data.totalRevenue,
+                    averageQuantity: data.totalQuantity / receiptHistory.length
+                };
+            });
+
+            return reportData;
+        }
+
+        function renderReport(salesData) {
+            const totalSalesElement = document.getElementById('totalSales');
+            const mostSoldProductElement = document.getElementById('mostSoldProduct');
+            const leastSoldProductElement = document.getElementById('leastSoldProduct');
+            const detailedReportTable = document.getElementById('detailedReport').querySelector('tbody');
+
+            // Calculate total sales
+            const totalSales = salesData.reduce((sum, product) => sum + product.totalRevenue, 0);
+            totalSalesElement.textContent = totalSales.toFixed(2);
+
+            // Identify most and least sold products
+            const mostSold = salesData.reduce((max, product) => product.totalQuantity > max.totalQuantity ? product : max, salesData[0]);
+            const leastSold = salesData.reduce((min, product) => product.totalQuantity < min.totalQuantity ? product : min, salesData[0]);
+
+            mostSoldProductElement.textContent = mostSold.name;
+            leastSoldProductElement.textContent = leastSold.name;
+
+            // Populate detailed report table
+            detailedReportTable.innerHTML = '';
+            salesData.sort((a, b) => b.totalQuantity - a.totalQuantity).forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>${product.averageQuantity.toFixed(2)}</td>
+                    <td>${product.totalQuantity.toFixed(2)}</td>
+                    <td>${product.totalRevenue.toFixed(2)}</td>
+                `;
+                detailedReportTable.appendChild(row);
+            });
+
+            // Display the report summary
+            document.getElementById('reportSummary').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
